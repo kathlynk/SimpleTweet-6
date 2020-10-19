@@ -25,6 +25,7 @@ public class LoginActivity extends OAuthLoginActionBarActivity<TwitterClient> {
 
 		sampleModelDao = ((TwitterApp) getApplicationContext()).getMyDatabase().sampleModelDao();
 
+		// Run in background thread
 		AsyncTask.execute(new Runnable() {
 			@Override
 			public void run() {

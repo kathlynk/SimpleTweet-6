@@ -1,20 +1,23 @@
 package com.codepath.apps.restclienttemplate;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.codepath.apps.restclienttemplate.models.Tweet;
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler;
-import com.github.scribejava.apis.TwitterApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
+import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +33,7 @@ public class TimelineActivity extends AppCompatActivity {
     SwipeRefreshLayout swipeContainer;
 
     public static final String TAG = "TimelineActivity";
+    private final int REQUEST_CODE = 20;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +41,7 @@ public class TimelineActivity extends AppCompatActivity {
         setContentView(R.layout.activity_timeline);
 
         client = TwitterApp.getRestClient(this);
+
         swipeContainer = findViewById(R.id.swipeContainer);
         // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
@@ -56,11 +61,46 @@ public class TimelineActivity extends AppCompatActivity {
         // Init the list of tweets and adapter
         tweets = new ArrayList<>();
         adapter = new TweetsAdapter(this, tweets);
-        // Recycler view setup: layout manager, adapter
+        // Recycler view setup: layout manager, a8dapter
         rvTweets.setLayoutManager(new LinearLayoutManager(this));
         rvTweets.setAdapter(adapter);
 
         populateHomeTimeline();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.compose) {
+            // Compose icon has been selected
+            // Navigate to the compose activity
+            Intent i = new Intent(this, ComposeActivity.class);
+            startActivityForResult(i, REQUEST_CODE);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
+            // Get data from the intent(tweet)
+            Tweet tweet = Parcels.unwrap(data.getParcelableExtra("tweet"));
+
+            // Update the RV with the new tweet
+            // Modify data source of tweets
+            tweets.add(0, tweet);
+            // Update the adapter
+            adapter.notifyItemInserted(0);
+            rvTweets.smoothScrollToPosition(0);
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void populateHomeTimeline() {
